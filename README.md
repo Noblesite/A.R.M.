@@ -10,13 +10,22 @@ The initial business objective is to determine whether Cisco AnyConnect material
 
 ## Current Status
 
-Project initialized with manual session management, resource snapshots, SQLite persistence, latest-session summary generation, local text report export, and a store-device validation matrix. A store engineer can launch A.R.M., start a baseline session, stop it, reopen the app, review a plain-language summary, and export the latest completed session as a `.txt` report.
+Project initialized with manual session management, resource snapshots, SQLite persistence, latest-session summary generation, local text report export, a store-device validation matrix, and the finalized A.R.M. diagnostic UI direction. A store engineer can launch A.R.M., start a baseline session, stop it, reopen the app, review a plain-language summary, and export the latest completed session as a `.txt` report.
 
 ## Current Slice
 
-Completed slice: Store-device validation matrix and procedure.
+Completed slice: Finalized diagnostic UI direction.
 
-This slice intentionally avoids claiming Android 11-14 validation results without connected Android 11-14 store-device targets. The repo now includes a repeatable validation matrix and procedure for the complete baseline and post-AnyConnect workflow, plus recorded smoke evidence from the connected Android 16 device available during this slice.
+This slice intentionally avoids changing monitoring, SQLite, report generation, and export behavior. It applies the finalized dark, high-contrast A.R.M. visual direction to the existing MVP.
+
+## Visual Design Summary
+
+- Dark mode first diagnostic dashboard using deep slate surfaces.
+- Telemetry cyan primary accent with green monitoring state, amber warning state, and critical red stop action.
+- Data-first cards for RAM, battery, network, sample count, session state, generated summary, and report export.
+- Android-native Compose controls with clear disabled states and readable contrast.
+- Vector launcher icon direction based on shield, A motif, and telemetry pulse.
+- Monochrome shield/pulse vector asset for notification-style use.
 
 ## Completed Deliverables
 
@@ -53,6 +62,26 @@ This slice intentionally avoids claiming Android 11-14 validation results withou
 - Complete manual validation procedure for Android 11-14 targets.
 - Pass criteria and failure-capture fields for store testing.
 - Connected instrumentation smoke test passed on SM-S928U1 running Android 16.
+- Tony Stark-inspired dark diagnostic dashboard UI.
+- Header with A.R.M. title, subtitle, and text-backed status indicator.
+- Session label edit field that disables while monitoring is active.
+- Telemetry cards for available RAM, used RAM, battery percent, battery temperature availability, app network RX/TX display, and sample count.
+- Accent-coded Start Monitoring, Stop Monitoring, and Generate Report controls.
+- Vector launcher icon and monochrome shield/pulse notification asset.
+
+## Files Changed
+
+- `app/src/main/java/net/noblesite/arm/MainActivity.kt`
+- `app/src/main/java/net/noblesite/arm/ui/theme/Color.kt`
+- `app/src/main/java/net/noblesite/arm/ui/theme/Theme.kt`
+- `app/src/main/res/drawable/ic_launcher_background.xml`
+- `app/src/main/res/drawable/ic_launcher_foreground.xml`
+- `app/src/main/res/drawable/ic_arm_monochrome.xml`
+- `app/src/main/res/mipmap-anydpi/ic_launcher.xml`
+- `app/src/main/res/mipmap-anydpi/ic_launcher_round.xml`
+- `app/src/main/res/values/colors.xml`
+- `app/src/main/res/values/themes.xml`
+- `README.md`
 
 ## Remaining Deliverables
 
@@ -87,6 +116,9 @@ This slice intentionally avoids claiming Android 11-14 validation results withou
 - Do not mark Android 11-14 validation complete until real store-device targets are connected and the matrix has been run.
 - Keep validation evidence in a plain repo document so store engineers can execute it without external test platforms.
 - Record non-target-device smoke results separately from Android 11-14 store-device validation results.
+- Keep this UI slice visual-only; do not modify sampler, database, summary, or export behavior to satisfy visual polish.
+- Use fixed dark A.R.M. colors rather than Material You dynamic color so screenshots and store-device validation remain visually consistent.
+- Show unavailable telemetry fields explicitly instead of inventing data that the MVP sampler does not collect.
 
 ## Recommended Next Slice
 
@@ -106,6 +138,11 @@ Run the validation matrix on a connected Android 11 store-device target.
 - Web portals.
 - AI analysis.
 - User authentication.
+- Animated telemetry effects.
+- Charting and sparklines.
+- Persisted custom session labels.
+- Tablet-specific two-pane layout.
+- Custom font packaging.
 
 ## Explicitly Deferred Features
 
@@ -121,20 +158,33 @@ Run the validation matrix on a connected Android 11 store-device target.
 - Web portals are deferred because reporting must be available on-device.
 - AI analysis is deferred because objective measurements and summaries come first.
 - User authentication is deferred because the first use case is local testing by a store engineer.
+- Animated telemetry effects are deferred because readability and validation matter more than motion.
+- Charting and sparklines are deferred because the MVP stores start/stop snapshots, not continuous historical samples.
+- Persisted custom session labels are deferred because this slice is UI-only and does not change the database schema.
+- Tablet-specific two-pane layout is deferred until Android 11-14 target validation identifies a real layout need.
+- Custom font packaging is deferred because Android system fonts satisfy the current readability requirement.
+
+## Known UI Limitations
+
+- Battery temperature is shown as unavailable because the current MVP sampler does not collect it.
+- App network RX/TX is displayed from the existing network counter source and marked as device-level source in the UI.
+- Sample count reflects available start/stop snapshots, not continuous polling.
+- Session label editing is UI-only and is not persisted in SQLite yet.
+- The optional splash screen concept is deferred.
 
 ## Business Objective Validation
 
 How does this support the business objective?
 
-This slice gives store engineers a repeatable validation procedure for proving A.R.M. can capture and export baseline and post-AnyConnect reports on Android 11-14 targets.
+This slice improves operator readability and reduces UI ambiguity while preserving the monitoring and report workflow used to compare baseline and post-AnyConnect sessions.
 
 Can the feature be validated in store testing?
 
-Partially in this environment. The checklist can be reviewed now, and `connectedDebugAndroidTest` passed on a connected Android 16 SM-S928U1. Full validation still requires connected Android 11-14 store-device targets.
+Partially in this environment. The UI can be built and smoke-tested now, and full store-device visual validation still requires connected Android 11-14 targets.
 
 Does this improve baseline comparison accuracy?
 
-Yes. A fixed validation matrix improves baseline comparison accuracy by making every target device follow the same start, stop, persistence, summary, export, and report-comparison steps.
+Yes. The UI makes session state, resource values, disabled actions, and report generation status easier to read without changing the underlying measurement path.
 
 ## Build Instructions
 
@@ -197,3 +247,7 @@ For this slice, verify that:
 - The exported report includes the generated summary, start snapshot, stop snapshot, and session change details.
 - Execute the `STORE_VALIDATION.md` matrix on Android 11, Android 12, Android 13, and Android 14 targets.
 - Treat Android 16 smoke evidence as useful build/device sanity only, not as Android 11-14 validation completion.
+- Confirm the dashboard uses the deep slate dark theme with cyan, green, amber, red, and muted slate accents.
+- Confirm session label editing is disabled while monitoring is active.
+- Confirm disabled Start, Stop, and Generate Report states are visually obvious.
+- Confirm the launcher icon uses the shield/A/pulse motif and the monochrome asset remains text-free.
