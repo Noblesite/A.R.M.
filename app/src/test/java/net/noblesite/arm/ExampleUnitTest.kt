@@ -180,6 +180,50 @@ class SessionControllerTest {
         assertEquals("0%", formatSignedPercent(0))
         assertEquals("Unavailable", formatSignedPercent(null))
     }
+
+    @Test
+    fun reportFileName_usesSessionId() {
+        assertEquals(
+            "arm-session-1000.txt",
+            reportFileName(testSessionSummary())
+        )
+    }
+
+    @Test
+    fun buildSessionTextReport_includesSummaryAndRawSnapshots() {
+        val report = buildSessionTextReport(testSessionSummary())
+
+        assertTrue(report.contains("A.R.M."))
+        assertTrue(report.contains("Latest Session Summary"))
+        assertTrue(report.contains("Session 1000"))
+        assertTrue(report.contains("Start Snapshot"))
+        assertTrue(report.contains("Stop Snapshot"))
+        assertTrue(report.contains("Session Change"))
+        assertTrue(report.contains("Available memory changed by -1 KB."))
+        assertTrue(report.contains("Network received 500 B and sent 750 B."))
+    }
+}
+
+private fun testSessionSummary(): SessionSummary {
+    return SessionSummary(
+        id = 1_000L,
+        startedAtMillis = 1_000L,
+        endedAtMillis = 91_000L,
+        startSnapshot = testSnapshot(
+            capturedAtMillis = 1_000L,
+            availableMemoryBytes = 4_500L,
+            batteryPercent = 80,
+            totalRxBytes = 1_000L,
+            totalTxBytes = 2_000L
+        ),
+        stopSnapshot = testSnapshot(
+            capturedAtMillis = 91_000L,
+            availableMemoryBytes = 3_476L,
+            batteryPercent = 78,
+            totalRxBytes = 1_500L,
+            totalTxBytes = 2_750L
+        )
+    )
 }
 
 private fun testSnapshot(

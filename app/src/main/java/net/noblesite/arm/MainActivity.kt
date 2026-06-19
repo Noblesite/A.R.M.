@@ -68,9 +68,13 @@ fun SessionScreen(
             currentTimeMillis = currentTimeMillis
         )
     }
+    val textReportExporter = remember(context) {
+        TextReportExporter(context = context.applicationContext)
+    }
     val coroutineScope = rememberCoroutineScope()
     var sessionState by remember { mutableStateOf(SessionState()) }
     var isBusy by remember { mutableStateOf(false) }
+    var exportMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(repository) {
         sessionState = repository.loadState()
@@ -79,6 +83,7 @@ fun SessionScreen(
     ProjectIdentity(
         state = sessionState,
         isBusy = isBusy,
+        exportMessage = exportMessage,
         onStart = {
             val nowMillis = currentTimeMillis()
             val startSnapshot = snapshotCollector.collect(capturedAtMillis = nowMillis)
@@ -109,6 +114,23 @@ fun SessionScreen(
                 }
             }
         },
+        onExport = {
+            val summary = sessionState.lastSummary
+            if (summary != null) {
+                coroutineScope.launch {
+                    isBusy = true
+                    exportMessage = null
+                    try {
+                        val exportedReport = textReportExporter.export(summary)
+                        exportMessage = "Exported ${exportedReport.fileName} to Downloads/A.R.M."
+                    } catch (throwable: Throwable) {
+                        exportMessage = "Export failed: ${throwable.message ?: "Unknown error"}"
+                    } finally {
+                        isBusy = false
+                    }
+                }
+            }
+        },
         modifier = modifier
     )
 }
@@ -117,8 +139,10 @@ fun SessionScreen(
 fun ProjectIdentity(
     state: SessionState,
     isBusy: Boolean,
+    exportMessage: String?,
     onStart: () -> Unit,
     onStop: () -> Unit,
+    onExport: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val activeSession = state.activeSession
@@ -218,6 +242,20 @@ fun ProjectIdentity(
             SessionDeltaDetails(summary = lastSummary)
             Spacer(modifier = Modifier.height(12.dp))
             GeneratedSummaryDetails(summary = generateSessionSummary(lastSummary))
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = onExport,
+                enabled = !isBusy
+            ) {
+                Text(text = "Export Report")
+            }
+            exportMessage?.let { message ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         } else {
             Text(
                 text = "No completed session yet.",
@@ -348,8 +386,10 @@ fun ProjectIdentityPreview() {
                 )
             ),
             isBusy = false,
+            exportMessage = null,
             onStart = {},
-            onStop = {}
+            onStop = {},
+            onExport = {}
         )
     }
 }

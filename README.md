@@ -10,13 +10,13 @@ The initial business objective is to determine whether Cisco AnyConnect material
 
 ## Current Status
 
-Project initialized with manual session management, resource snapshots, SQLite persistence, and latest-session summary generation. A store engineer can launch A.R.M., start a baseline session, stop it, reopen the app, and review a plain-language summary of the latest completed session.
+Project initialized with manual session management, resource snapshots, SQLite persistence, latest-session summary generation, and local text report export. A store engineer can launch A.R.M., start a baseline session, stop it, reopen the app, review a plain-language summary, and export the latest completed session as a `.txt` report.
 
 ## Current Slice
 
-Completed slice: Summary generation for the latest completed session.
+Completed slice: Text report export for the latest completed session.
 
-This slice intentionally avoids text report export and external sharing. The app now generates an on-screen summary for the latest completed session using the persisted start/stop snapshots.
+This slice intentionally avoids external sharing, cloud upload, and multi-session comparison. The app now writes a local text report for the latest completed session to Downloads using Android storage APIs.
 
 ## Completed Deliverables
 
@@ -45,10 +45,13 @@ This slice intentionally avoids text report export and external sharing. The app
 - Summary lines for duration, available-memory change, battery change, network RX/TX change, and low-memory observation.
 - On-screen generated summary display below raw snapshot details.
 - Unit tests for summary generation and signed percent formatting.
+- Text report generation for the latest completed session.
+- Local text report export to `Downloads/A.R.M.` using MediaStore.
+- Export confirmation message in the app.
+- Unit tests for report filename and report body content.
 
 ## Remaining Deliverables
 
-- Text report export.
 - Android 11-14 store-device validation.
 
 ## Decision Log
@@ -74,10 +77,13 @@ This slice intentionally avoids text report export and external sharing. The app
 - Disable session controls while SQLite writes are in flight so rapid taps cannot create ambiguous session boundaries.
 - Generate summaries only from the latest completed session in this slice; multi-session comparison remains deferred until export/report workflows exist.
 - Keep summary text plain and deterministic so store engineers can compare before/after runs without interpretation drift.
+- Export only the latest completed session in this slice; exporting both baseline and post-install sessions together remains deferred.
+- Use MediaStore Downloads for text reports so Android 11-14 devices can save reports locally without broad file permissions.
+- Do not add share sheets, cloud upload, or remote destinations for this slice.
 
 ## Recommended Next Slice
 
-Implement text report export for the latest completed session.
+Validate the complete workflow on Android 11-14 store-device targets.
 
 ## Future Ideas
 
@@ -113,15 +119,15 @@ Implement text report export for the latest completed session.
 
 How does this support the business objective?
 
-This slice turns the latest completed session's stored measurements into a plain-language summary. That makes it easier for a store engineer to review memory, battery, and network changes before and after Cisco AnyConnect without manually interpreting every raw counter.
+This slice lets a store engineer save the latest completed session as a local text report. That supports the Cisco AnyConnect comparison by making baseline and post-install measurements reviewable outside the app without cloud services or external telemetry tooling.
 
 Can the feature be validated in store testing?
 
-Yes. A store engineer can install the app, run and stop a session, and confirm that the latest completed session displays a generated summary without external tooling.
+Yes. A store engineer can install the app, run and stop a session, tap Export Report, and confirm that a `.txt` report appears under Downloads/A.R.M. without external tooling.
 
 Does this improve baseline comparison accuracy?
 
-Yes. A consistent generated summary reduces manual reading errors and makes baseline and post-AnyConnect sessions easier to compare using the same fields and wording.
+Yes. Exported text reports give store engineers durable, consistent artifacts for comparing the baseline run and the post-AnyConnect run.
 
 ## Build Instructions
 
@@ -170,3 +176,6 @@ For this slice, verify that:
 - Start and Stop controls are disabled while a session write is in progress.
 - A stopped session displays a generated latest-session summary.
 - The generated summary includes duration, available-memory change, battery change, network RX/TX change, and low-memory observation.
+- A stopped session enables Export Report.
+- Tapping Export Report writes `arm-session-<session id>.txt` under Downloads/A.R.M.
+- The exported report includes the generated summary, start snapshot, stop snapshot, and session change details.
