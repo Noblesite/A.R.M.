@@ -216,11 +216,42 @@ fun ProjectIdentity(
             )
             Spacer(modifier = Modifier.height(12.dp))
             SessionDeltaDetails(summary = lastSummary)
+            Spacer(modifier = Modifier.height(12.dp))
+            GeneratedSummaryDetails(summary = generateSessionSummary(lastSummary))
         } else {
             Text(
                 text = "No completed session yet.",
                 style = MaterialTheme.typography.bodyMedium
             )
+        }
+    }
+}
+
+@Composable
+fun GeneratedSummaryDetails(
+    summary: GeneratedSessionSummary,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = summary.title,
+                style = MaterialTheme.typography.titleMedium
+            )
+            summary.lines.forEach { line ->
+                Text(
+                    text = line,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         }
     }
 }

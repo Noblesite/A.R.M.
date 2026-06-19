@@ -140,6 +140,46 @@ class SessionControllerTest {
         assertEquals(1_000L, summary?.startSnapshot?.capturedAtMillis)
         assertEquals(61_000L, summary?.stopSnapshot?.capturedAtMillis)
     }
+
+    @Test
+    fun generateSessionSummary_includesDurationAndResourceChanges() {
+        val summary = SessionSummary(
+            id = 1_000L,
+            startedAtMillis = 1_000L,
+            endedAtMillis = 61_000L,
+            startSnapshot = testSnapshot(
+                capturedAtMillis = 1_000L,
+                availableMemoryBytes = 4L * 1024L * 1024L,
+                batteryPercent = 90,
+                totalRxBytes = 10L * 1024L,
+                totalTxBytes = 20L * 1024L
+            ),
+            stopSnapshot = testSnapshot(
+                capturedAtMillis = 61_000L,
+                availableMemoryBytes = 3L * 1024L * 1024L,
+                batteryPercent = 88,
+                totalRxBytes = 14L * 1024L,
+                totalTxBytes = 25L * 1024L
+            )
+        )
+
+        val generatedSummary = generateSessionSummary(summary)
+
+        assertEquals("Latest Session Summary", generatedSummary.title)
+        assertTrue(generatedSummary.lines.contains("Duration: 1m 0s"))
+        assertTrue(generatedSummary.lines.contains("Available memory changed by -1 MB."))
+        assertTrue(generatedSummary.lines.contains("Battery changed by -2%."))
+        assertTrue(generatedSummary.lines.contains("Network received 4 KB and sent 5 KB."))
+        assertTrue(generatedSummary.lines.contains("Low memory observed: No."))
+    }
+
+    @Test
+    fun formatSignedPercent_marksPositiveValues() {
+        assertEquals("+2%", formatSignedPercent(2))
+        assertEquals("-1%", formatSignedPercent(-1))
+        assertEquals("0%", formatSignedPercent(0))
+        assertEquals("Unavailable", formatSignedPercent(null))
+    }
 }
 
 private fun testSnapshot(
