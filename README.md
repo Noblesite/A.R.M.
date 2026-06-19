@@ -10,13 +10,13 @@ The initial business objective is to determine whether Cisco AnyConnect material
 
 ## Current Status
 
-Project initialized with manual session management, resource snapshots, SQLite persistence, latest-session summary generation, and local text report export. A store engineer can launch A.R.M., start a baseline session, stop it, reopen the app, review a plain-language summary, and export the latest completed session as a `.txt` report.
+Project initialized with manual session management, resource snapshots, SQLite persistence, latest-session summary generation, local text report export, and a store-device validation matrix. A store engineer can launch A.R.M., start a baseline session, stop it, reopen the app, review a plain-language summary, and export the latest completed session as a `.txt` report.
 
 ## Current Slice
 
-Completed slice: Text report export for the latest completed session.
+Completed slice: Store-device validation matrix and procedure.
 
-This slice intentionally avoids external sharing, cloud upload, and multi-session comparison. The app now writes a local text report for the latest completed session to Downloads using Android storage APIs.
+This slice intentionally avoids claiming Android 11-14 validation results without connected Android 11-14 store-device targets. The repo now includes a repeatable validation matrix and procedure for the complete baseline and post-AnyConnect workflow, plus recorded smoke evidence from the connected Android 16 device available during this slice.
 
 ## Completed Deliverables
 
@@ -49,6 +49,10 @@ This slice intentionally avoids external sharing, cloud upload, and multi-sessio
 - Local text report export to `Downloads/A.R.M.` using MediaStore.
 - Export confirmation message in the app.
 - Unit tests for report filename and report body content.
+- Store-device validation matrix in `STORE_VALIDATION.md`.
+- Complete manual validation procedure for Android 11-14 targets.
+- Pass criteria and failure-capture fields for store testing.
+- Connected instrumentation smoke test passed on SM-S928U1 running Android 16.
 
 ## Remaining Deliverables
 
@@ -80,10 +84,13 @@ This slice intentionally avoids external sharing, cloud upload, and multi-sessio
 - Export only the latest completed session in this slice; exporting both baseline and post-install sessions together remains deferred.
 - Use MediaStore Downloads for text reports so Android 11-14 devices can save reports locally without broad file permissions.
 - Do not add share sheets, cloud upload, or remote destinations for this slice.
+- Do not mark Android 11-14 validation complete until real store-device targets are connected and the matrix has been run.
+- Keep validation evidence in a plain repo document so store engineers can execute it without external test platforms.
+- Record non-target-device smoke results separately from Android 11-14 store-device validation results.
 
 ## Recommended Next Slice
 
-Validate the complete workflow on Android 11-14 store-device targets.
+Run the validation matrix on a connected Android 11 store-device target.
 
 ## Future Ideas
 
@@ -119,15 +126,15 @@ Validate the complete workflow on Android 11-14 store-device targets.
 
 How does this support the business objective?
 
-This slice lets a store engineer save the latest completed session as a local text report. That supports the Cisco AnyConnect comparison by making baseline and post-install measurements reviewable outside the app without cloud services or external telemetry tooling.
+This slice gives store engineers a repeatable validation procedure for proving A.R.M. can capture and export baseline and post-AnyConnect reports on Android 11-14 targets.
 
 Can the feature be validated in store testing?
 
-Yes. A store engineer can install the app, run and stop a session, tap Export Report, and confirm that a `.txt` report appears under Downloads/A.R.M. without external tooling.
+Partially in this environment. The checklist can be reviewed now, and `connectedDebugAndroidTest` passed on a connected Android 16 SM-S928U1. Full validation still requires connected Android 11-14 store-device targets.
 
 Does this improve baseline comparison accuracy?
 
-Yes. Exported text reports give store engineers durable, consistent artifacts for comparing the baseline run and the post-AnyConnect run.
+Yes. A fixed validation matrix improves baseline comparison accuracy by making every target device follow the same start, stop, persistence, summary, export, and report-comparison steps.
 
 ## Build Instructions
 
@@ -159,6 +166,15 @@ Run Android instrumented tests on a connected device or emulator:
 ./gradlew connectedDebugAndroidTest
 ```
 
+Run store-device validation:
+
+```sh
+./gradlew assembleDebug
+adb devices -l
+```
+
+Install the generated APK on each Android 11-14 target, then execute `STORE_VALIDATION.md`.
+
 For this slice, verify that:
 
 - The app installs as `net.noblesite.arm`.
@@ -179,3 +195,5 @@ For this slice, verify that:
 - A stopped session enables Export Report.
 - Tapping Export Report writes `arm-session-<session id>.txt` under Downloads/A.R.M.
 - The exported report includes the generated summary, start snapshot, stop snapshot, and session change details.
+- Execute the `STORE_VALIDATION.md` matrix on Android 11, Android 12, Android 13, and Android 14 targets.
+- Treat Android 16 smoke evidence as useful build/device sanity only, not as Android 11-14 validation completion.
